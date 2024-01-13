@@ -1,0 +1,39 @@
+<!doctype html>
+<html>
+<!-- Minimalist script to load python modules -->
+<head>
+    <meta charset="utf-8">
+    <script type="text/javascript"
+        src="https://cdn.jsdelivr.net/npm/brython@3.10/brython.min.js">
+    </script> 
+    <script type="text/javascript"
+        src="https://cdn.jsdelivr.net/npm/brython@3.10/brython_stdlib.js">
+    </script> 
+    <script src="https://cdn.jsdelivr.net/gh/andy31lewis/brycharts@latest/brycharts.brython.js"></script>
+
+    <link rel="stylesheet" href="viz.css">
+</head>
+
+<body onload="brython()">
+<script type="text/python" id="prog" >
+
+import json
+from topten import init
+
+import getfile
+
+config = {
+    "slot_count": 10, 
+    "paragraph1": "paragraph1", 
+    "paragraph2": "paragraph2", 
+
+}         
+
+
+getfile.getfile()
+</script>
+
+</body>
+
+</html>
+
