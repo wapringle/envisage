@@ -61,9 +61,9 @@ config = {
 }
 
 def mangle(text):
-    r = ''
-    for x in str(text): r += chr(ord(x) ^ 5)
-    return r
+    #r = ''
+    #for x in str(text): r += chr(ord(x) ^ 5)
+    return text
 
 def parse_url():
     url = document.URL
