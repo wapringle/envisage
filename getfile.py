@@ -59,6 +59,12 @@ config = {
     "paragraph2": "paragraph2", 
 
 }
+
+def mangle(text):
+    r = ''
+    for x in str(text): r += chr(ord(x) ^ 5)
+    return r
+
 def parse_url():
     url = document.URL
     pr = urlparse(url)
@@ -75,7 +81,7 @@ def getfile():
     url, gets = parse_url()
     if gets != {}:
         print(gets['input'][0])
-        json_data = loads(gets["input"][0])
+        json_data = loads(mangle(gets["input"][0]))
         print(json_data)
         topten_button.disabled = False
         compare_button.disabled = False
@@ -141,16 +147,18 @@ def getfile():
         body.clear()
         #make_url.init(url, json_data, config)
         
-        content = window.encodeURIComponent(dumps(json_data))
+        content = window.encodeURIComponent(mangle(dumps(json_data)))
         result = f'{url}?input={content}'
         document["body_wrapper"] <= DIV(
             DIV(
-            SPAN(result),
-            Class="Body"
+                LABEL("Cut and paste this url", For="rt1") + 
+                TEXTAREA(result, id="rt1", rows="20", cols="80", autocomplete="off", readonly=True), 
+            Class="Body",
+            style={'height': px(play_height)}
             ), 
             
         Class="border_bottom"
-        )        
+        )
 
 
     #bind(save_btn, "mousedown")
