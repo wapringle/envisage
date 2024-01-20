@@ -44,7 +44,7 @@ config = {
 }
 
 def mangle(text):
-    if True:
+    if False:
         return text
     r = ''
     for x in str(text): r += chr(ord(x) ^ 5)
