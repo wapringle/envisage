@@ -35,7 +35,24 @@ config = None
 content_index = -1
 previous_deck = None
 current_stream = None
+stop_flag = False
+max_val = 100
+rank_slots = []
 
+def reset_globals():
+    global top_ten_data, config, content_index, previous_deck, current_stream, stop_flag, max_val, rank_slots
+    
+    top_ten_data = None
+    config = None
+    
+    content_index = -1
+    previous_deck = None
+    current_stream = None
+    stop_flag = False
+    max_val = 100
+    rank_slots = []
+    
+    
 @dataclass
 class Base_Class():
     def name_str(self):
@@ -63,8 +80,10 @@ class PLdata(Base_Class):
     pts: int
 
     def name_str(self): return self.name
-    def value_str(self): return self.pts
-    def bar_str(self): return f'{100 * float(self.pts) /100: 2.0f}'
+    def value_str(self): return str(self.pts)
+    def bar_str(self):
+        global max_val
+        return f'{100 * float(self.pts) /max_val: 2.0f}'
 
 
 
@@ -82,12 +101,21 @@ def make_rank(k):
 def make_it(top_ten_data):
     def make_league(year):
         i = 1
-        for team,pts in sorted(top_ten_data[year].items(), key=lambda a: float(a[1]), reverse=True):
+        for team,pts in sorted(filter(lambda a: a[1] != None, top_ten_data[year].items()), key=lambda a: float(a[1]), reverse=True):
             q = PLdata(i, team, team, pts)
             yield astuple(AQdata(q.name, q.make_html()))
             i += 1
             if i > 10:
                 break
+        # if too few, fill up with dummies
+        while i <= 10:
+            q = PLdata(i, f"-- {i}", f"-- {i}", 0)
+            yield astuple(AQdata(q.name, q.make_html()))
+            i += 1
+            if i > 10:
+                break
+            
+        
 
     return [(year, list(make_league(year))) for year in sorted(top_ten_data.keys()) ]
 
@@ -103,7 +131,7 @@ def transform(premier_league) :
     
 
 def debug(*args):
-    if False:
+    if True:
         print(*args)
     
 def more_forwards():
@@ -147,11 +175,9 @@ def update(old, new):
     oldd = dict(((a[0], i) for i, a in enumerate(old)))
     for oldslot, newslot in replacements:
         oldd[oldslot] = oldd[newslot]
-    return [(a[0], a[1], i, oldd[a[0]]) for i, a in enumerate(new)]
-
-
-stop_flag = False
-
+        
+    ret = [(a[0], a[1], i, oldd[a[0]]) for i, a in enumerate(new)]
+    return ret
 
 
 def get_max_value():
@@ -167,11 +193,14 @@ def px(x):
 
 
 def init(init_top_ten_data, init_config):
-    global top_ten_data, config
+    global top_ten_data, config, previous_deck, content_index, max_val
+    
+    reset_globals()
     
     top_ten_data = transform(init_top_ten_data)
+    print(max_val)
     config = init_config
-    
+
     get_next_decade()
     back_one = BUTTON("<", id="back_one", disabled=True, Class="selector")
     back_stream = BUTTON("<<", id="back_stream", disabled=True, Class="selector")
@@ -391,7 +420,6 @@ def whenever(function, state, do):
     local()
 
 
-rank_slots = []
 
 
 def all_clear():
@@ -479,6 +507,10 @@ def multi_step(ev, forward=True):
 
         def busy_check():
             whenever(all_clear, True, local)
+
+        def funny():
+            timer.set_timeout(local, 5000)
+
         if stop_flag:
             stop_flag = False
             current_stream = None
@@ -486,8 +518,12 @@ def multi_step(ev, forward=True):
             done_arrange()
         else:
             if can_move():
-                timer.set_timeout(busy_check, 1000)
-                single_step(forward)
+                if True:
+                    timer.set_timeout(busy_check, 5000)
+                    single_step(forward)
+                else:
+                    whenever(all_clear, True, funny)
+                    single_step(forward)
             else:
                 current_stream = None
                 ev.target.text = ev.target.saveText
