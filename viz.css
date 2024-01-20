@@ -20,7 +20,7 @@ table {
 
 .header {
   margin: auto;
-  width: 95%;
+  width: 100%;
   /* border: 3px solid green; */
   border-bottom: black;
   border-bottom-style: double;
@@ -38,6 +38,12 @@ table {
 .td_left {
   vertical-align: top;
   width: 30%;
+  text-align: center;
+}
+
+.td_right {
+  vertical-align: top;
+  width: 70%;
   text-align: center;
 }
 
