@@ -180,8 +180,27 @@ def getfile(input_data=None):
             compare.init(json_data, config)
         whenPossible(fun)
 
+    @bind(make_url_button, "click")
+    def on_make_url_button(ev):
+        body = document["body_wrapper"]
+        body.clear()
+        #make_url.init(url, json_data, config)
+        
+        content = window.encodeURIComponent(mangle(dumps(json_data)))
+        result = f'{url}?input={content}'
+        document["body_wrapper"] <= DIV(
+            DIV(
+                DIV(LABEL("Cut and paste this url", For="rt1"))+ 
+                DIV(TEXTAREA(result, id="rt1", rows="80", cols="80", autocomplete="off", readonly=True)), 
+            Class="Body",
+            style={"margin"}
+            ), 
+            
+        Class="border_bottom"
+        )
+
     @bind(make_download_button, "click")
-    def make_download_button(ev):
+    def on_make_download_button(ev):
         body = document["body_wrapper"]
         body.clear()
         disable()
