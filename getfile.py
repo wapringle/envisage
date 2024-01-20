@@ -193,7 +193,7 @@ def getfile(input_data=None):
                 DIV(LABEL("Cut and paste this url", For="rt1"))+ 
                 DIV(TEXTAREA(result, id="rt1", rows="80", cols="80", autocomplete="off", readonly=True)), 
             Class="Body",
-            style={"margin"}
+            style={"margin": "auto"}
             ), 
             
         Class="border_bottom"
