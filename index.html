@@ -1,6 +1,6 @@
 <!doctype html>
 <html>
-<!-- Minimalist script to load python modules -->
+
 <head>
     <meta charset="utf-8">
     <script type="text/javascript"
@@ -10,15 +10,38 @@
         src="https://cdn.jsdelivr.net/npm/brython@3.10/brython_stdlib.js">
     </script> 
     <script src="https://cdn.jsdelivr.net/gh/andy31lewis/brycharts@latest/brycharts.brython.js"></script>
-
     <link rel="stylesheet" href="viz.css">
 </head>
 
 <body onload="brython()">
-<script type="text/python" id="prog" >
 
+<script id="message">
+var syncFlag=0;
+function checkChild(good,bad) {
+    if(parent != self) { // Im a child
+        // alert(" Im a child");
+        function sendMessage() {
+            const message = 'Hello from Child Window!';
+            const targetOrigin = '*'; 
+            parent.postMessage(message, targetOrigin);
+        }
+    
+        window.addEventListener('message', receiveMessage, false);
+    
+        function receiveMessage(event) {
+            //alert('Received message: ' + event.data);
+            good(event.data);
+        }
+        sendMessage();
+    } else {
+        good();
+    }       
+}  
+</script>
+
+<script type="text/python" id="prog" >
+from browser import bind, window, document, html, alert
 import json
-from topten import init
 
 import getfile
 
@@ -28,11 +51,12 @@ config = {
     "paragraph2": "paragraph2", 
 
 }         
-
-
-getfile.getfile()
+def bad():
+    alert("It didnae work")
+    
+window.checkChild(getfile.getfile, bad)
+    
 </script>
-
 </body>
 
 </html>
