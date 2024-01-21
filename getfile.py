@@ -21,7 +21,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
-from browser import bind, window, document, html, alert, ajax
+from browser import bind, window, document, html, alert, ajax, markdown
 from browser.html import *
 from json import load, loads, JSONDecodeError, dumps
 import javascript
@@ -85,9 +85,10 @@ def getfile(input_data=None):
         DIV(H1("Data Visualisation")) + 
         INPUT(type="file", id="rtfile1", accept="*.json") +
         BUTTON("Top Ten",id="topten_button",disabled=True) + 
-        BUTTON("Compare",id="compare_button",disabled=False) + 
+        BUTTON("Compare",id="compare_button",disabled=True) + 
         BUTTON("Make URL",id="make_url_button",disabled=True) + 
-        BUTTON("Make Download",id="make_download_button",disabled=True),
+        BUTTON("Make Download",id="make_download_button",disabled=True) + 
+        BUTTON("About",id="about_button",disabled=False),
         
         Class="background header", style={'height': "20%", 'xwidth': '100%'}, 
         id="head"
@@ -112,8 +113,8 @@ def getfile(input_data=None):
     compare_button = document["compare_button"]
     make_url_button = document["make_url_button"]
     make_download_button = document["make_download_button"]
-    
-    all_buttons = {topten_button, compare_button, make_url_button, make_download_button}
+    about_button = document["about_button"]
+    all_buttons = {topten_button, compare_button, make_url_button, make_download_button, about_button}
     def enable(*button_list):
         for b in all_buttons:
             b.disabled = b not in button_list
@@ -193,7 +194,7 @@ def getfile(input_data=None):
                 DIV(LABEL("Cut and paste this url", For="rt1"))+ 
                 DIV(TEXTAREA(result, id="rt1", rows="80", cols="80", autocomplete="off", readonly=True)), 
             Class="Body",
-            style={"margin": "auto"}
+            style={"margin": "auto",}
             ), 
             
         Class="border_bottom"
@@ -205,6 +206,23 @@ def getfile(input_data=None):
         body.clear()
         disable()
         parent.init(json_data, config)
+
+    @bind(about_button, "click")
+    def on_about_button(ev):
+        ev.target.disabled = True
+        body = document["body_wrapper"]
+        url="https://wapringle.github.io/vizier/README.md"
+        mk, scripts = markdown.mark(open(url).read())        
+        body.clear()
+        #disable()
+        document["body_wrapper"] <= DIV(
+            mk, 
+            id="body", 
+            Class="border_bottom"
+            )
+        ev.target.disabled = False
+        
+       
 
 
     #bind(save_btn, "mousedown")
