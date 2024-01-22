@@ -87,8 +87,9 @@ def getfile(input_data=None):
         BUTTON("Top Ten",id="topten_button",disabled=True) + 
         BUTTON("Compare",id="compare_button",disabled=True) + 
         BUTTON("Make URL",id="make_url_button",disabled=True) + 
-        BUTTON("Make Download",id="make_download_button",disabled=True) + 
-        BUTTON("About",id="about_button",disabled=False),
+        BUTTON("Make Download",id="make_download_button",disabled=True) +
+        A("About", href="readme.html"), 
+        #BUTTON("About",id="about_button",disabled=False),
         
         Class="background header", style={'height': "20%", 'xwidth': '100%'}, 
         id="head"
@@ -113,8 +114,8 @@ def getfile(input_data=None):
     compare_button = document["compare_button"]
     make_url_button = document["make_url_button"]
     make_download_button = document["make_download_button"]
-    about_button = document["about_button"]
-    all_buttons = {topten_button, compare_button, make_url_button, make_download_button, about_button}
+    #about_button = document["about_button"]
+    all_buttons = {topten_button, compare_button, make_url_button, make_download_button}
     def enable(*button_list):
         for b in all_buttons:
             b.disabled = b not in button_list
@@ -207,6 +208,7 @@ def getfile(input_data=None):
         disable()
         parent.init(json_data, config)
 
+    """
     @bind(about_button, "click")
     def on_about_button(ev):
         ev.target.disabled = True
@@ -221,7 +223,7 @@ def getfile(input_data=None):
             Class="border_bottom"
             )
         ev.target.disabled = False
-        
+    """    
        
 
 
