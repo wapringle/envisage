@@ -71,7 +71,7 @@ def init(json_data, config):
         
     select = BUTTON("+", disabled=True, Class="selector")
     
-    chosen = SELECT(size=3, Class="select_list")
+    chosen = SELECT(size=4, Class="select_list")
     
     remove = BUTTON("-", disabled=True, Class="selector")
     
