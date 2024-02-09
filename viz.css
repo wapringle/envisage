@@ -64,6 +64,20 @@ td.td_left {
   width: 100%;
 }
 
+div.tooltip {
+    position: absolute;
+    border-style: inset;
+    border-width: thin;
+    visibility: hidden; 
+    background-color: white;
+}
+    
+
+span.tooltip {
+    margin: 10px;
+    font-size: x-small;
+    font-family: sans-serif;
+}
 .chart {
 /*
     width: f;
@@ -218,4 +232,16 @@ div.bar {
 .background-item {
   background-color: rgba(255, 255, 255, 0.8);
   border-right: 1px solid rgba(0, 0, 0, 0.8);
+}
+
+
+table.dump {
+  text-align: right;
+}  
+th.dump {
+background-color: grey;
+}
+table.dump tr:nth-child(odd) td{
+  background-color: lightgrey;
+
 }

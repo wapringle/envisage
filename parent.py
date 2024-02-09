@@ -9,7 +9,7 @@ iframe="""
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Parent Window</title>
+    <title>Envisage</title>
 </head>
 <body>
 <script>
@@ -25,8 +25,49 @@ iframe="""
 </html>
 """
 
+def json_download(json_data, config):
+    txt = json.dumps(json_data)
+    content = window.encodeURIComponent(txt)
+    href = "data:text/json,"+content
+
+    filename = INPUT("", id="filename") 
+    download = A("download", id="download", download="", disabled=True)
+
+    @bind(filename, "blur")
+    def on_filename_blur(ev):
+        if len(ev.target.value) > 0:
+            fullname = filename.value + ".json"
+            download.download = fullname
+            download.text = "download " + fullname
+            download.href = href
+            download.disabled = False
+        else:
+            download.disabled = True
+
+    @bind(filename, "focus")
+    def on_filename_focus(ev):
+        download.disabled = True
+        
+
+    print("Loading")
+    document["body_wrapper"] <= DIV(
+        DIV("Download", Class="border_bottom") + 
+        DIV(
+            SPAN("export json dataset json file") +
+            DIV(SPAN("Filename") + filename +SPAN(".json"))+
+            DIV(download), 
+            style={"borderStyle": 'solid', "margin": "auto", "width": "fit-content",} 
+
+        
+        ), 
+        
+    Class="body border_bottom"
+    )
+    
+#download("filename", "json_data", "url")
+
 def init(json_data, config):
-    url="https://wapringle.github.io/vizier/index.html"
+    url="https://wapringle.github.io/envisage/index.html"
     txt = iframe.format(json.dumps(json_data), url)
     content = window.encodeURIComponent(txt)
     href = "data:text/html,"+content
@@ -65,6 +106,4 @@ def init(json_data, config):
     Class="body border_bottom"
     )
     
-#download("filename", "json_data", "url")
-
-    
+#download("filename", "json_data", "url")    

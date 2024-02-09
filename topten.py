@@ -196,9 +196,9 @@ def init(init_top_ten_data, init_config):
     global top_ten_data, config, previous_deck, content_index, max_val
     
     reset_globals()
-    
+    max_val = max( float(v) for _, k in init_top_ten_data.items() for _, v in k.items())
     top_ten_data = transform(init_top_ten_data)
-    print(max_val)
+    print("max", max_val)
     config = init_config
 
     get_next_decade()

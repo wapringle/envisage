@@ -21,20 +21,22 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
-from browser import bind, window, document, html, alert, ajax, markdown
+from browser import bind, window, document, html, alert, ajax, markdown, timer
 from browser.html import *
 from json import load, loads, JSONDecodeError, dumps
 import javascript
 
 from urllib.parse import urlparse, parse_qs
 
-import topten, compare, parent
+import topten, compare, parent, to_html
 
 def px(x):
     return str(x) + "px"
 
 json_data=None
-
+cookie = None   
+evx = 0
+evy = 0
 
 config = {
     "slot_count": 10, 
@@ -77,8 +79,47 @@ def message_handler():
     json_data = loads(data_buffer.text)
     print(json_data.keys())
     
+def report_error(*args):
+    alert(*args)
     
 def getfile(input_data=None):
+    
+    def validate_json_format(j_data):
+        validate_python_format(j_data, False)
+        
+    def validate_python_format(data, python_format=True):
+        global json_data, max_value
+        
+        try:
+            if not python_format:
+                json_data = loads(data)
+            else:
+                json_data = data
+            if not isinstance(json_data, dict):
+                raise TypeError("json structure is not a dictionary")
+            if len(json_data) == 0:
+                raise TypeError("json struct is empty")
+            for k, v in json_data.items():
+                if not isinstance(v, dict):
+                    raise TypeError(f"row {k} is not a dictionary")
+                for k1, v1 in v.items():
+                    try:
+                        k1f = float(k1)
+                        v1f = float(v1)
+                    except:
+                        raise TypeError(f"item {k1},{v1} in row {k} cannot be converted to float")
+
+                          
+            max_value = max( v for _, k in json_data.items() for _, v in k.items())
+            disable()
+            on_topten_click(None)
+        except JSONDecodeError as e:
+            report_error(e)
+        except TypeError as e:
+            report_error(e)
+        except Exception as e:
+            report_error(e)
+    
     global json_data, url
     wrapper = DIV(id="wrapper", style={"width": "100%", "height":"96vh"});
     wrapper <= DIV(
@@ -86,8 +127,10 @@ def getfile(input_data=None):
         INPUT(type="file", id="rtfile1", accept="*.json") +
         BUTTON("Top Ten",id="topten_button",disabled=True) + 
         BUTTON("Compare",id="compare_button",disabled=True) + 
+        BUTTON("Raw Data",id="raw_button",disabled=True) + 
         BUTTON("Make URL",id="make_url_button",disabled=True) + 
-        BUTTON("Make Download",id="make_download_button",disabled=True) +
+        BUTTON("Make Wrapper",id="make_download_button",disabled=True) +
+        BUTTON("Export Dataset",id="export_dataset_button",disabled=True) +
         A("About", href="readme.html"), 
         #BUTTON("About",id="about_button",disabled=False),
         
@@ -112,10 +155,51 @@ def getfile(input_data=None):
     load_btn = document["rtfile1"]
     topten_button = document["topten_button"]
     compare_button = document["compare_button"]
+    raw_button = document["raw_button"]
+        
     make_url_button = document["make_url_button"]
     make_download_button = document["make_download_button"]
+    export_dataset_button =  document["export_dataset_button"]
     #about_button = document["about_button"]
-    all_buttons = {topten_button, compare_button, make_url_button, make_download_button}
+    
+    tooltip=DIV(SPAN("TT",id="tt_text",Class="tooltip"),Class="tooltip")
+    document <=tooltip
+    
+    tooltips = {
+        topten_button: "Animate the Top Ten entries through time",
+        compare_button: "Compare selected entries",
+        raw_button: "Display the  underlying dataset",
+        make_url_button: "create URL for this dataset",
+        make_download_button: "create webpage wrapper for dataset",
+        export_dataset_button: "export dataset as json file",
+    }
+    for k, v in tooltips.items():
+        def mouse_move(ev):
+            global cookie, evx, evy
+            evx =ev.x
+            evy = ev.y
+            
+        def mouse_in(ev):
+            global cookie, evx, evy
+            document["tt_text"].text=ev.target.tooltip
+            tooltip.style.zindex=2
+            def delayed(ev):
+                tooltip.style.left=px(evx +7)
+                tooltip.style.top=px(evy + 9)
+                tooltip.style.visibility="visible"
+            cookie = timer.set_timeout(delayed, 1000, ev)
+                        
+        def mouse_out(ev):
+            global cookie
+            timer.clear_timeout(cookie)
+            tooltip.style.visibility="hidden"
+            
+        k.tooltip = v
+        k.bind("mouseover", mouse_in)
+        k.bind("mouseleave", mouse_out)
+        k.bind("mousemove", mouse_move)
+    
+    all_buttons = {topten_button, compare_button, raw_button, make_url_button, make_download_button, export_dataset_button}
     def enable(*button_list):
         for b in all_buttons:
             b.disabled = b not in button_list
@@ -130,6 +214,21 @@ def getfile(input_data=None):
         
     @bind(load_btn, "input")
     def file_read(ev):
+        
+        def validate(data):
+            if not isinstance(data, dict):
+                raise TypeError("json structure is not a dictionary")
+            for k, v in data.items():
+                if not isinstance(v, dict):
+                    raise TypeError(f"row {k} is not a dictionary")
+                for k1, v1 in v.items():
+                    try:
+                        k1f = float(k1)
+                        v1f = float(v1)
+                    except:
+                        raise TypeError(f"item {k1},{v1} in row {k} cannot be converted to float")
+            return True
+        
         filename = None
     
         def onload(event):
@@ -138,14 +237,21 @@ def getfile(input_data=None):
             The file content, as text, is the FileReader instance's "result"    
             attribute."""
             
+            
             #alert("Failed to load json file " + load_btn.files[0] )
             try:
                 json_data = loads(event.target.result)
+                validate(json_data)
                 disable()
+                on_raw_button(ev)
+                
             except JSONDecodeError as e:
+                alert(e)
+            except TypeError as e:
                 alert(e)
             except Exception as e:
                 alert(e)
+                
                 
             """
             gotjson(json_data, config)
@@ -172,7 +278,7 @@ def getfile(input_data=None):
         body.clear()
         disable(topten_button)
         topten.init(json_data, config)
-        
+
     @bind(compare_button, "click")
     def on_compare_click(ev):
         body = document["body_wrapper"]
@@ -180,6 +286,16 @@ def getfile(input_data=None):
             body.clear()
             disable()
             compare.init(json_data, config)
+        whenPossible(fun)
+
+    @bind(raw_button, "click")
+    def on_raw_button(ev):
+        body = document["body_wrapper"]
+        #alert("click")
+        def fun():
+            body.clear()
+            disable()
+            body <= to_html.init(json_data, config)
         whenPossible(fun)
 
     @bind(make_url_button, "click")
@@ -207,24 +323,14 @@ def getfile(input_data=None):
         body.clear()
         disable()
         parent.init(json_data, config)
-
-    """
-    @bind(about_button, "click")
-    def on_about_button(ev):
-        ev.target.disabled = True
+        
+        
+    @bind(export_dataset_button, "click")
+    def _(ev):
         body = document["body_wrapper"]
-        url="https://wapringle.github.io/vizier/README.md"
-        mk, scripts = markdown.mark(open(url).read())        
         body.clear()
-        #disable()
-        document["body_wrapper"] <= DIV(
-            mk, 
-            id="body", 
-            Class="border_bottom"
-            )
-        ev.target.disabled = False
-    """    
-       
+        disable()
+        parent.json_download(json_data, config)
 
 
     #bind(save_btn, "mousedown")
@@ -238,6 +344,9 @@ def getfile(input_data=None):
         save_btn.attrs["href"] = "data:text/plain," + content
         return
     
+    """ Finally get to process input line """
+    
+    
     if input_data != None:
         json_data = javascript.JSON.parse(input_data)
         #print(json_data)
@@ -249,26 +358,23 @@ def getfile(input_data=None):
     if gets != {}:
         
         def read(req):
-            global json_data
-            print(req.json)
-            json_data = req.json
-            enable(compare_button)
-            on_topten_click(None)
-        
+            validate_python_format(req.json)
                
         if "input" in gets:
-            print(gets['input'][0])
-            json_data = loads(mangle(gets["input"][0]))
+            j_data = mangle(gets["input"][0])
+            validate_json_format(j_data)
+            return
+            
         elif "file" in gets:
             try:
-                print(gets["file"])
+                #print(gets["file"])
                 ajax.get(gets["file"][0], mode="json", oncomplete=read)
                 return
             except:
-                alert("Load error", gets["file"])
+                report_error("Load error", gets["file"][0])
                 return
-        enable(compare_button)
-        on_topten_click(None)
+#        enable(compare_button)
+#        on_topten_click(None)
         return
 
 
