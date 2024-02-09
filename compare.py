@@ -146,7 +146,7 @@ Data is the concentration of particulate matter (e.g. soot particles) extracted 
         remove.disabled = True
         
     def on_city_list_change(ev):
-        select.disabled = (already_chosen() or len(chosen.options) >=3) 
+        select.disabled = (already_chosen() or len(chosen.options) >=4) 
 
     def on_chosen_change(ev):
         remove.disabled = False
