@@ -56,28 +56,14 @@ def parse_url():
     url = document.URL
     pr = urlparse(url)
     gets = parse_qs(pr.query)
-    return url, gets
+    return url.split("?")[0], gets
     
 def message_handler():
-    global json_data
-    """
-    def receive_message(event):
-        #alert('Received message: ' + event.data)
-        return
-        
-        
-    window.bind('message', receive_message)
-    if window.parent == window.self:
-        print("NO")
-        return False
-    print("YES")
-    return True
-    """
     while window.syncFlag != 2:
         alert(window.syncFlag)
     data_buffer = document["data_buffer"]
     json_data = loads(data_buffer.text)
-    print(json_data.keys())
+    #print(json_data.keys())
     
 def report_error(*args):
     alert(*args)
@@ -96,18 +82,21 @@ def getfile(input_data=None):
             else:
                 json_data = data
             if not isinstance(json_data, dict):
+                print(json_data)
                 raise TypeError("json structure is not a dictionary")
             if len(json_data) == 0:
                 raise TypeError("json struct is empty")
             for k, v in json_data.items():
                 if not isinstance(v, dict):
                     raise TypeError(f"row {k} is not a dictionary")
-                for k1, v1 in v.items():
+                for k1, v1 in list(v.items()):
                     try:
                         k1f = float(k1)
                         v1f = float(v1)
                     except:
-                        raise TypeError(f"item {k1},{v1} in row {k} cannot be converted to float")
+                        #silently delete non numeric items
+                        del v[k1]
+                        #raise TypeError(f"item {k1},{v1} in row {k} cannot be converted to float")
 
                           
             max_value = max( v for _, k in json_data.items() for _, v in k.items())
@@ -138,13 +127,6 @@ def getfile(input_data=None):
         id="head"
         )
     
-    
-    """
-    document <= DIV(head, Class="background")
-    
-    play_height = window.innerHeight - head.height - 50
-    
-    """
     
     body = DIV(DIV(id="body",  Class="background"), style={"height": "75%", "xwidth": "95%",}, Class="background", id="body_wrapper" )
     
@@ -237,30 +219,8 @@ def getfile(input_data=None):
             The file content, as text, is the FileReader instance's "result"    
             attribute."""
             
+            validate_json_format(event.target.result)
             
-            #alert("Failed to load json file " + load_btn.files[0] )
-            try:
-                json_data = loads(event.target.result)
-                validate(json_data)
-                disable()
-                on_raw_button(ev)
-                
-            except JSONDecodeError as e:
-                alert(e)
-            except TypeError as e:
-                alert(e)
-            except Exception as e:
-                alert(e)
-                
-                
-            """
-            gotjson(json_data, config)
-            document['rt1'].value = event.target.result
-            # display "save" button
-            save_btn.style.display = "inline"
-            # set attribute "download" to file name
-            save_btn.attrs["download"] = file.name
-            """
             
         # Get the selected file as a DOM File object
         file = load_btn.files[0]
@@ -348,16 +308,14 @@ def getfile(input_data=None):
     
     
     if input_data != None:
-        json_data = javascript.JSON.parse(input_data)
-        #print(json_data)
-        disable()
-        on_topten_click(None)
+        validate_json_format(input_data)
         return
-    
+        
     url, gets = parse_url()
     if gets != {}:
         
         def read(req):
+            #print(req.json)
             validate_python_format(req.json)
                
         if "input" in gets:
