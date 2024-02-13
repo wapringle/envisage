@@ -1,5 +1,7 @@
 from browser import bind, window, document, html, alert, ajax, markdown
 from browser.html import *
+import time
+
 def px(x):
     return str(x) + "px"
 
@@ -51,6 +53,20 @@ def init(json_data, config):
     return DIV(table, style={"overflow": "scroll", "background-color": "white", "width": "100%","height": px(play_height),})
             
 
+def readme():
+    head = document["head"]
+    try:
 
+        play_height = window.innerHeight - head.height - 50
+    except:
+
+        play_height = 0
+    fname = "readme.html"
+
+    fake_qs = '?foo=%s' %time.time()
+    value = open(fname+fake_qs).read()    
+    div = DIV(style={"overflow": "scroll", "background-color": "white", "width": "100%","height": px(play_height),})
+    div.html = value
+    return div
 
 

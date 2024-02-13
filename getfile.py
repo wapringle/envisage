@@ -59,6 +59,7 @@ def parse_url():
     return url.split("?")[0], gets
     
 def message_handler():
+    global json_data
     while window.syncFlag != 2:
         alert(window.syncFlag)
     data_buffer = document["data_buffer"]
@@ -82,7 +83,6 @@ def getfile(input_data=None):
             else:
                 json_data = data
             if not isinstance(json_data, dict):
-                print(json_data)
                 raise TypeError("json structure is not a dictionary")
             if len(json_data) == 0:
                 raise TypeError("json struct is empty")
@@ -112,7 +112,7 @@ def getfile(input_data=None):
     global json_data, url
     wrapper = DIV(id="wrapper", style={"width": "100%", "height":"96vh"});
     wrapper <= DIV(
-        DIV(H1("Data Visualisation")) + 
+        DIV(H1("Envisage Data Visualisation")) + 
         INPUT(type="file", id="rtfile1", accept="*.json") +
         BUTTON("Top Ten",id="topten_button",disabled=True) + 
         BUTTON("Compare",id="compare_button",disabled=True) + 
@@ -120,13 +120,13 @@ def getfile(input_data=None):
         BUTTON("Make URL",id="make_url_button",disabled=True) + 
         BUTTON("Make Wrapper",id="make_download_button",disabled=True) +
         BUTTON("Export Dataset",id="export_dataset_button",disabled=True) +
-        A("About", href="readme.html"), 
-        #BUTTON("About",id="about_button",disabled=False),
+        BUTTON("About",id="about_button",disabled=False),
         
         Class="background header", style={'height': "20%", 'xwidth': '100%'}, 
         id="head"
         )
     
+
     
     body = DIV(DIV(id="body",  Class="background"), style={"height": "75%", "xwidth": "95%",}, Class="background", id="body_wrapper" )
     
@@ -142,7 +142,7 @@ def getfile(input_data=None):
     make_url_button = document["make_url_button"]
     make_download_button = document["make_download_button"]
     export_dataset_button =  document["export_dataset_button"]
-    #about_button = document["about_button"]
+    about_button = document["about_button"]
     
     tooltip=DIV(SPAN("TT",id="tt_text",Class="tooltip"),Class="tooltip")
     document <=tooltip
@@ -154,6 +154,7 @@ def getfile(input_data=None):
         make_url_button: "create URL for this dataset",
         make_download_button: "create webpage wrapper for dataset",
         export_dataset_button: "export dataset as json file",
+        about_button: "About Envisage",
     }
     for k, v in tooltips.items():
         def mouse_move(ev):
@@ -203,12 +204,14 @@ def getfile(input_data=None):
             for k, v in data.items():
                 if not isinstance(v, dict):
                     raise TypeError(f"row {k} is not a dictionary")
-                for k1, v1 in v.items():
+                for k1, v1 in list(v.items()):
                     try:
                         k1f = float(k1)
                         v1f = float(v1)
                     except:
-                        raise TypeError(f"item {k1},{v1} in row {k} cannot be converted to float")
+                        #silently delete non numeric items
+                        del v[k1]                        
+                        #raise TypeError(f"item {k1},{v1} in row {k} cannot be converted to float")
             return True
         
         filename = None
@@ -220,7 +223,6 @@ def getfile(input_data=None):
             attribute."""
             
             validate_json_format(event.target.result)
-            
             
         # Get the selected file as a DOM File object
         file = load_btn.files[0]
@@ -291,7 +293,15 @@ def getfile(input_data=None):
         body.clear()
         disable()
         parent.json_download(json_data, config)
+        
+    @bind(about_button, "click")
+    def _(ev):
+        body = document["body_wrapper"]
+        body.clear()
+        body <= to_html.readme()
+        
 
+        
 
     #bind(save_btn, "mousedown")
     def mousedown(evt):
@@ -310,13 +320,15 @@ def getfile(input_data=None):
     if input_data != None:
         validate_json_format(input_data)
         return
-        
+    
     url, gets = parse_url()
     if gets != {}:
         
         def read(req):
-            #print(req.json)
-            validate_python_format(req.json)
+            if req.json == None:
+                report_error("Load error", gets["file"][0])
+            else:
+                validate_python_format(req.json)
                
         if "input" in gets:
             j_data = mangle(gets["input"][0])
